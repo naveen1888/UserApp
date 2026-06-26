@@ -2,6 +2,7 @@ package com.user.app.ui.login
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.user.app.features.auth.presentation.screen.LoginContent
 import org.junit.Rule
 import org.junit.Test
 
@@ -14,9 +15,13 @@ class LoginScreenTest {
     fun loginScreen_displaysFieldsAndButton() {
         composeTestRule.setContent {
             LoginContent(
+                username = "",
+                password = "",
                 isLoggingIn = false,
                 error = null,
-                onLogin = { _, _ -> },
+                onUsernameChanged = {},
+                onPasswordChanged = {},
+                onLogin = {},
                 onClearError = {}
             )
         }
@@ -31,15 +36,16 @@ class LoginScreenTest {
         var loginTriggered = false
         composeTestRule.setContent {
             LoginContent(
+                username = "test@example.com",
+                password = "password",
                 isLoggingIn = false,
                 error = null,
-                onLogin = { _, _ -> loginTriggered = true },
+                onUsernameChanged = {},
+                onPasswordChanged = {},
+                onLogin = { loginTriggered = true },
                 onClearError = {}
             )
         }
-
-        // Fill in a username/email to pass validation
-        composeTestRule.onNodeWithTag("UsernameInput").performTextInput("test@example.com")
 
         composeTestRule.onNodeWithTag("LoginButton").performClick()
         assert(loginTriggered)

@@ -4,114 +4,104 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.user.app.data.local.pref.UserPreferencesRepository
-import com.user.app.ui.adduser.AddUserScreen
-import com.user.app.ui.login.LoginScreen
-import com.user.app.ui.userdetails.UserDetailsScreen
-import com.user.app.ui.userlist.UserListScreen
-import com.user.app.ui.UserViewModel
-import com.user.app.ui.theme.MyApplicationTheme
+import com.user.app.core.domain.usecase.GetLoginStatusUseCase
+import com.user.app.core.navigation.NavigationConstants
+import com.user.app.core.theme.MyApplicationTheme
+import com.user.app.features.auth.presentation.screen.LoginScreen
+import com.user.app.features.auth.presentation.viewmodel.LoginViewModel
+import com.user.app.features.user_management.presentation.screen.AddUserScreen
+import com.user.app.features.user_management.presentation.screen.UserDetailsScreen
+import com.user.app.features.user_management.presentation.screen.UserListScreen
+import com.user.app.features.user_management.presentation.viewmodel.UserManagementViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * The main entry point of the User Management application.
- *
- * This activity sets up the Compose-based UI and delegates navigation
- * to the [UserApp] composable.
- */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    lateinit var userPreferencesRepository: UserPreferencesRepository
+    lateinit var getLoginStatusUseCase: GetLoginStatusUseCase
+    private val viewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                UserApp(userPreferencesRepository)
+                UserApp(getLoginStatusUseCase)
             }
         }
     }
 }
 
-/**
- * Root composable that manages the application's navigation stack.
- *
- * It uses [NavHost] to switch between different screens:
- * - Login: Initial destination.
- * - User List: Displaying all registered users.
- * - Add User: Form to create a new user.
- * - User Details: Detailed view of a single user.
- */
 @Composable
 fun UserApp(
-    userPreferencesRepository: UserPreferencesRepository,
-    viewModel: UserViewModel = hiltViewModel()
+    getLoginStatusUseCase: GetLoginStatusUseCase,
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    userViewModel: UserManagementViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
-    val isLoggedIn = userPreferencesRepository.isLoggedIn.collectAsState(initial = false).value
-    val scope = rememberCoroutineScope()
+    // Using UseCase instead of Repository
+    val isLoggedIn = getLoginStatusUseCase().collectAsState(initial = false).value
+
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) Constants.NAV_ROUTE_USER_LIST else Constants.NAV_ROUTE_LOGIN
+        startDestination = if (isLoggedIn) NavigationConstants.ROUTE_USER_LIST else NavigationConstants.ROUTE_LOGIN
     ) {
-        composable(Constants.NAV_ROUTE_LOGIN) {
+        composable(NavigationConstants.ROUTE_LOGIN) {
             LoginScreen(
-                viewModel = viewModel,
-                onLoginSuccess = { email ->
-                    scope.launch {
-                        userPreferencesRepository.saveLoginStatus(true, email)
-                        navController.navigate(Constants.NAV_ROUTE_USER_LIST) {
-                            popUpTo(Constants.NAV_ROUTE_LOGIN) { inclusive = true }
-                        }
+                viewModel = loginViewModel,
+                onLoginSuccess = {
+                    // Logic moved to ViewModel; just navigate here
+                    navController.navigate(NavigationConstants.ROUTE_USER_LIST) {
+                        popUpTo(NavigationConstants.ROUTE_LOGIN) { inclusive = true }
                     }
                 }
             )
         }
-        composable(Constants.NAV_ROUTE_USER_LIST) {
+
+        composable(NavigationConstants.ROUTE_USER_LIST) {
             UserListScreen(
-                viewModel = viewModel,
+                viewModel = userViewModel,
                 onUserClick = { userId ->
-                    navController.navigate("${Constants.NAV_ROUTE_USER_DETAILS}/$userId")
+                    navController.navigate("${NavigationConstants.ROUTE_USER_DETAILS}/$userId")
                 },
                 onAddUserClick = {
-                    navController.navigate(Constants.NAV_ROUTE_ADD_USER)
+                    navController.navigate(NavigationConstants.ROUTE_ADD_USER)
                 }
             )
         }
-        composable(Constants.NAV_ROUTE_ADD_USER) {
+
+        composable(NavigationConstants.ROUTE_ADD_USER) {
             AddUserScreen(
-                viewModel = viewModel,
+                viewModel = userViewModel,
                 onNavigateBack = {
-                    // Navigate to user list after adding or when going back
-                    navController.navigate(Constants.NAV_ROUTE_USER_LIST) {
-                        popUpTo(Constants.NAV_ROUTE_ADD_USER) { inclusive = true }
+                    navController.navigate(NavigationConstants.ROUTE_USER_LIST) {
+                        popUpTo(NavigationConstants.ROUTE_ADD_USER) { inclusive = true }
                     }
                 }
             )
         }
+
         composable(
-            route = "${Constants.NAV_ROUTE_USER_DETAILS}/{${Constants.NAV_ARG_USER_ID}}",
-            arguments = listOf(navArgument(Constants.NAV_ARG_USER_ID) { type = NavType.IntType })
+            route = "${NavigationConstants.ROUTE_USER_DETAILS}/{${NavigationConstants.ARG_USER_ID}}",
+            arguments = listOf(navArgument(NavigationConstants.ARG_USER_ID) { type = NavType.IntType })
         ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getInt(Constants.NAV_ARG_USER_ID) ?: return@composable
+            val userId = backStackEntry.arguments?.getInt(NavigationConstants.ARG_USER_ID) ?: return@composable
             UserDetailsScreen(
                 userId = userId,
-                viewModel = viewModel,
+                viewModel = userViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
