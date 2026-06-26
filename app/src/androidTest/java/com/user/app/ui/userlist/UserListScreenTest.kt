@@ -5,8 +5,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.user.app.data.local.entity.User
-import com.user.app.ui.components.UserItem
+import com.user.app.features.user_management.domain.model.User
+import com.user.app.features.user_management.presentation.components.UserItem
+import com.user.app.features.user_management.presentation.screen.UserListContent
 import org.junit.Rule
 import org.junit.Test
 

@@ -2,6 +2,7 @@ package com.user.app.ui.adduser
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.user.app.features.user_management.presentation.screen.AddUserContent
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,7 +14,17 @@ class AddUserScreenTest {
     @Test
     fun addUserContent_displaysInputFields() {
         composeTestRule.setContent {
-            AddUserContent(isSaving = false, onAddUser = { _, _, _ -> })
+            AddUserContent(
+                name = "",
+                email = "",
+                age = "",
+                isLoading = false,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
+            )
         }
 
         composeTestRule.onNodeWithTag("NameInput").assertIsDisplayed()
@@ -25,7 +36,17 @@ class AddUserScreenTest {
     @Test
     fun addUserContent_showsErrors_whenInputsAreEmpty() {
         composeTestRule.setContent {
-            AddUserContent(isSaving = false, onAddUser = { _, _, _ -> })
+            AddUserContent(
+                name = "",
+                email = "",
+                age = "",
+                isLoading = false,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
+            )
         }
 
         composeTestRule.onNodeWithTag("SaveButton").performClick()
@@ -38,11 +59,19 @@ class AddUserScreenTest {
     @Test
     fun addUserContent_showsError_whenNameIsInvalid() {
         composeTestRule.setContent {
-            AddUserContent(isSaving = false, onAddUser = { _, _, _ -> })
+            AddUserContent(
+                name = "John123",
+                email = "john@example.com",
+                age = "25",
+                isLoading = false,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
+            )
         }
 
-        // Names with numbers should be invalid
-        composeTestRule.onNodeWithTag("NameInput").performTextInput("John123")
         composeTestRule.onNodeWithTag("SaveButton").performClick()
         
         composeTestRule.onNodeWithText("Name can only contain letters and spaces").assertIsDisplayed()
@@ -56,12 +85,15 @@ class AddUserScreenTest {
 
         composeTestRule.setContent {
             AddUserContent(
-                isSaving = false,
-                onAddUser = { name, email, age ->
-                    nameResult = name
-                    emailResult = email
-                    ageResult = age
-                }
+                name = "",
+                email = "",
+                age = "",
+                isLoading = false,
+                onNameChanged = { name -> nameResult = name },
+                onEmailChanged = { email -> emailResult = email },
+                onAgeChanged = { age -> ageResult = age },
+                onAddUser = {},
+                onClearError = {}
             )
         }
 
@@ -81,10 +113,19 @@ class AddUserScreenTest {
     @Test
     fun addUserContent_showsError_whenEmailIsInvalid() {
         composeTestRule.setContent {
-            AddUserContent(isSaving = false, onAddUser = { _, _, _ -> })
+            AddUserContent(
+                name = "John",
+                email = "invalid-email",
+                age = "25",
+                isLoading = false,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
+            )
         }
 
-        composeTestRule.onNodeWithTag("EmailInput").performTextInput("invalid-email")
         composeTestRule.onNodeWithTag("SaveButton").performClick()
         
         composeTestRule.onNodeWithText("Invalid email format").assertIsDisplayed()
@@ -93,11 +134,19 @@ class AddUserScreenTest {
     @Test
     fun addUserContent_showsError_whenAgeIsInvalid() {
         composeTestRule.setContent {
-            AddUserContent(isSaving = false, onAddUser = { _, _, _ -> })
+            AddUserContent(
+                name = "John",
+                email = "john@example.com",
+                age = "150",
+                isLoading = false,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
+            )
         }
 
-        // Test age above 100
-        composeTestRule.onNodeWithTag("AgeInput").performTextInput("150")
         composeTestRule.onNodeWithTag("SaveButton").performClick()
         composeTestRule.onNodeWithText("Enter a valid age (1-100)").assertIsDisplayed()
 
@@ -114,9 +163,16 @@ class AddUserScreenTest {
         
         composeTestRule.setContent {
             AddUserContent(
-                isSaving = false,
-                errorMessage = duplicateEmailMsg,
-                onAddUser = { _, _, _ -> }
+                name = "John",
+                email = "john@example.com",
+                age = "25",
+                isLoading = false,
+                error = com.user.app.core.error.AppError.ValidationError(duplicateEmailMsg),
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
             )
         }
 
@@ -126,18 +182,19 @@ class AddUserScreenTest {
 
     @Test
     fun addUserContent_callsOnAddUser_whenInputsAreValid() {
-        var nameResult = ""
-        var emailResult = ""
-        var ageResult = 0
+        var addUserCalled = false
 
         composeTestRule.setContent {
             AddUserContent(
-                isSaving = false,
-                onAddUser = { name, email, age ->
-                    nameResult = name
-                    emailResult = email
-                    ageResult = age
-                }
+                name = "",
+                email = "",
+                age = "",
+                isLoading = false,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = { addUserCalled = true },
+                onClearError = {}
             )
         }
 
@@ -147,15 +204,23 @@ class AddUserScreenTest {
         
         composeTestRule.onNodeWithTag("SaveButton").performClick()
 
-        assert(nameResult == "Alice")
-        assert(emailResult == "alice@test.com")
-        assert(ageResult == 25)
+        assert(addUserCalled)
     }
 
     @Test
     fun addUserContent_disablesFields_whenSaving() {
         composeTestRule.setContent {
-            AddUserContent(isSaving = true, onAddUser = { _, _, _ -> })
+            AddUserContent(
+                name = "John",
+                email = "john@example.com",
+                age = "25",
+                isLoading = true,
+                onNameChanged = {},
+                onEmailChanged = {},
+                onAgeChanged = {},
+                onAddUser = {},
+                onClearError = {}
+            )
         }
 
         composeTestRule.onNodeWithTag("NameInput").assertIsNotEnabled()

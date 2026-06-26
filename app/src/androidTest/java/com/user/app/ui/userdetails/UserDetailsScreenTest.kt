@@ -2,7 +2,8 @@ package com.user.app.ui.userdetails
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.user.app.data.local.entity.User
+import com.user.app.features.user_management.domain.model.User
+import com.user.app.features.user_management.presentation.screen.UserDetailsContent
 import org.junit.Rule
 import org.junit.Test
 
@@ -19,23 +20,22 @@ class UserDetailsScreenTest {
             UserDetailsContent(user = user, onNavigateBack = {})
         }
 
-        composeTestRule.onNodeWithText("Name: Jane Doe").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Email: jane@test.com").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Age: 28").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Jane Doe").assertIsDisplayed()
+        composeTestRule.onNodeWithText("jane@test.com").assertIsDisplayed()
+        composeTestRule.onNodeWithText("28").assertIsDisplayed()
     }
 
     @Test
     fun userDetailsContent_showsLoadingIndicator_whenUserIsNull() {
         composeTestRule.setContent {
-            UserDetailsContent(user = null, onNavigateBack = {})
+            UserDetailsContent(user = null, isLoading = true, onNavigateBack = {})
         }
 
-        // Verify that the loading indicator is displayed using its test tag
+        // Verify that the loading indicator is displayed
         composeTestRule.onNodeWithTag("LoadingIndicator").assertIsDisplayed()
         
         // Verify that user details are NOT shown
-        composeTestRule.onNodeWithText("Name:", substring = true).assertDoesNotExist()
-        composeTestRule.onNodeWithText("Email:", substring = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText("Jane Doe").assertDoesNotExist()
     }
 
     @Test
