@@ -20,6 +20,7 @@ import com.user.app.core.navigation.NavigationConstants
 import com.user.app.core.theme.MyApplicationTheme
 import com.user.app.features.auth.presentation.screen.LoginScreen
 import com.user.app.features.auth.presentation.viewmodel.LoginViewModel
+import com.user.app.features.todo.presentation.screen.TodoScreen
 import com.user.app.features.user_management.presentation.screen.AddUserScreen
 import com.user.app.features.user_management.presentation.screen.UserDetailsScreen
 import com.user.app.features.user_management.presentation.screen.UserListScreen
@@ -39,7 +40,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                UserApp(getLoginStatusUseCase)
+                UserApp()
             }
         }
     }
@@ -47,25 +48,31 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun UserApp(
-    getLoginStatusUseCase: GetLoginStatusUseCase,
     loginViewModel: LoginViewModel = hiltViewModel(),
     userViewModel: UserManagementViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
-    // Using UseCase instead of Repository
-    val isLoggedIn = getLoginStatusUseCase().collectAsState(initial = false).value
 
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) NavigationConstants.ROUTE_USER_LIST else NavigationConstants.ROUTE_LOGIN
+        startDestination = NavigationConstants.ROUTE_TODO
     ) {
         composable(NavigationConstants.ROUTE_LOGIN) {
             LoginScreen(
                 viewModel = loginViewModel,
                 onLoginSuccess = {
-                    // Logic moved to ViewModel; just navigate here
                     navController.navigate(NavigationConstants.ROUTE_USER_LIST) {
                         popUpTo(NavigationConstants.ROUTE_LOGIN) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(NavigationConstants.ROUTE_TODO) {
+            TodoScreen(
+                onLoginSuccess = {
+                    navController.navigate(NavigationConstants.ROUTE_USER_LIST) {
+                        popUpTo(NavigationConstants.ROUTE_TODO) { inclusive = true }
                     }
                 }
             )

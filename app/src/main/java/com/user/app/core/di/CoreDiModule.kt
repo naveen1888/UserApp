@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import com.user.app.core.util.Constants
 import com.user.app.core.data.local.db.UserDatabase
+import com.user.app.core.data.repository.UserPreferencesRepositoryImpl
+import com.user.app.core.domain.repository.UserPreferencesRepository
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +25,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class CoreDiModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferencesRepository(
+        userPreferencesRepositoryImpl: UserPreferencesRepositoryImpl
+    ): UserPreferencesRepository
 
     companion object {
         @Provides
